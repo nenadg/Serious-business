@@ -16,13 +16,13 @@ var gaem = (function(){
 			max = 80,
 			movingObjects = (function(){
 				var a = [];
-				for(var i = 0; i < 24; i++)
-					a.push(Math.floor(Math.random() * 49));
+				for(var i = 0; i < 14; i++)
+					a.push(Math.floor(Math.random() * 29));
 
 				return a;
 			})();
 
-		for(var i = 1; i < 120; i++){
+		for(var i = 1; i < 70; i++){
 
 			tempoObj.push({ 
 				x:  Math.floor(Math.random() * (values.width - min + 1)) + min, //width - Math.floor(Math.random() * i*10),
@@ -34,7 +34,13 @@ var gaem = (function(){
 				done: false,
 				type: 'image',
 				points: 68,
-				alpha: 1
+				alpha: 1,
+				destroy: function(){
+					var bulletIndex = values.boxes.indexOf(this);
+					values.boxes.splice(bulletIndex, 1);
+					//shooting = false;
+					this.dead = 1;
+				}
 			});
 		}
 
@@ -50,8 +56,8 @@ var gaem = (function(){
 			for (var i = 0; i < boxes.length; i++) {
 				if(!intersecting(boxes[i], boxes[i+1])){
 					newBoxes.push(boxes[i]);
-					if(boxes[i+1])
-						boxes[i+1].x = boxes[i].right ;
+					/*if(boxes[i+1])
+						boxes[i+1].x = boxes[i].right ;*/
 				} else {
 					if(boxes[i+1])
 						boxes[i+1].y = boxes[i].top ;
@@ -60,7 +66,7 @@ var gaem = (function(){
 
 			lastBox++;
 			
-			if(lastBox < 100)
+			if(lastBox < 50)
 				checkIntersections(newBoxes, next);
 
 			else {
@@ -74,10 +80,14 @@ var gaem = (function(){
 					var i = movingObjects[item],
 						speed = movingObjects[item];
 
-					values.boxes[i].points = movingObjects[item] * 10;
-					values.boxes[i].moving = true;
-					values.boxes[i].alpha = .8;
-					move(values.boxes[i], speed); 
+					if(values.boxes[i] && values.boxes[i].feature != 'next'){
+						values.boxes[i].points = movingObjects[item] * 10;
+						values.boxes[i].moving = true;
+						values.boxes[i].alpha = .8;
+
+						if(values.boxes[i].feature != 'start')
+							move(values.boxes[i], speed); 
+					}
 				}
 
 				next();
@@ -152,8 +162,9 @@ var gaem = (function(){
 				if(values.boxes[i].dead > 0)
 					values.boxes[i].dead--;
 				else {
-					var shapebIndex = values.boxes.indexOf(values.boxes[i]);
-					values.boxes.splice(shapebIndex, 1);
+					values.boxes[i].destroy();
+					//var shapebIndex = values.boxes.indexOf(values.boxes[i]);
+					//values.boxes.splice(shapebIndex, 1);
 				}
 			}
 			
@@ -191,8 +202,12 @@ var gaem = (function(){
 			} else if (dir === "b") {
 				values.player.grounded = true;
 				values.player.jumping = false;
+				// want to move along with object but it sucks
+				/*if(values.boxes[i].moving)
+					values.player.x = values.boxes[i].x + 20;*/
 			} else if (dir === "t") {
 				values.player.velY *= -1;
+
 			}
 		}
 		
@@ -257,7 +272,7 @@ var gaem = (function(){
 			if(shapeB.feature == 'die')
 				die();
 
-			if(shapeB.feature == 'next')
+			if((shapeB.feature == 'next') ||(shapeA.x == values.width))
 				die(values.startPoint);
 		}
 
@@ -306,8 +321,9 @@ var gaem = (function(){
 				for(var o in values.boxes)
 					shot(shape, values.boxes[o]);
 			}
-			
+		
 			shape.x = left <= 0? left++: left;
+			shape.step = speed;
 		}, speed);
 	};
 
@@ -324,9 +340,12 @@ var gaem = (function(){
 			idle: true,
 			destroy: function(){
 				var bulletIndex = values.boxes.indexOf(this);
-				values.boxes.splice(bulletIndex,1);
-				shooting =false;
-				this.dead = true;
+					
+				if(bulletIndex > -1)
+					values.boxes.splice(bulletIndex, 1);
+
+				shooting = false;
+				this.dead = 1;
 			},
 			autodestroy: function(){
 				setTimeout(function(){
@@ -345,21 +364,25 @@ var gaem = (function(){
 	};
 
 	function shot(shapeA, shapeB){
-		
-		var vX = (shapeA.x + (shapeA.width / 2)) - (shapeB.x + (shapeB.width / 2)),
-			vY = (shapeA.y + (shapeA.height / 2)) - (shapeB.y + (shapeB.height / 2)),
-			
-			hWidths = (shapeA.width / 2) + (shapeB.width / 2),
-			hHeights = (shapeA.height / 2) + (shapeB.height / 2),
-			colDir = null;
+		if(shapeB.feature != 'bullet' && !shapeB.dead && !shapeA.dead && shapeB.feature != 'next'){
+			var vX = (shapeA.x + (shapeA.width / 2)) - (shapeB.x + (shapeB.width / 2)),
+				vY = (shapeA.y + (shapeA.height / 2)) - (shapeB.y + (shapeB.height / 2)),
+				
+				hWidths = (shapeA.width / 2) + (shapeB.width / 2),
+				hHeights = (shapeA.height / 2) + (shapeB.height / 2),
+				colDir = null;
 
-		if (Math.abs(vX) < hWidths && Math.abs(vY) < hHeights && shapeB.feature != 'bullet' && !shapeB.dead && !shapeA.dead && shapeB.feature != 'next') {
-			if (vX > 0) {
-				shapeB.alpha = .2;
-				shapeB.dead = 20;
-				values.startPoint = parseInt(values.startPoint + 100);
-				values.points.innerHTML = values.startPoint;
-				shapeA.destroy();
+			
+
+			if (Math.abs(vX) < hWidths && Math.abs(vY) < hHeights) {
+				if (vX > 0) {
+					shapeB.alpha = .2;
+					shapeB.dead = 20;
+					values.startPoint = parseInt(values.startPoint + 100);
+					values.points.innerHTML = values.startPoint;
+
+					shapeA.destroy();
+				}
 			}
 		}
 	};

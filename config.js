@@ -1,4 +1,4 @@
-var requestAnimationFrame;
+//var requestAnimationFrame;
 
 var Gaem = (function(){
 	var canvas, points, ctx, width, height, keys, friction, gravity, startPoint, animating, player,
@@ -7,7 +7,7 @@ var Gaem = (function(){
 	function configure(next, currentScore){
 
 		(function () {
-			requestAnimationFrame = window.requestAnimationFrame || window.mozRequestAnimationFrame || window.webkitRequestAnimationFrame || window.msRequestAnimationFrame;
+			requestAnimationFrame = window.requestAnimationFrame;// || window.mozRequestAnimationFrame || window.webkitRequestAnimationFrame || window.msRequestAnimationFrame;
 			window.requestAnimationFrame = requestAnimationFrame;
 		})();
 
