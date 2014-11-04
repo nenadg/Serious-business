@@ -22,7 +22,7 @@ var gaem = (function(){
 				return a;
 			})();
 
-		for(var i = 1; i < 70; i++){
+		for(var i = 1; i < 100; i++){
 
 			tempoObj.push({ 
 				x:  Math.floor(Math.random() * (values.width - min + 1)) + min, //width - Math.floor(Math.random() * i*10),
@@ -49,27 +49,26 @@ var gaem = (function(){
 		function checkIntersections(boxes, next){
 			var newBoxes = [];
 
-			boxes.sort(function(a, b){
-				return  a.x > b.x;
+			boxes = boxes.sort(function(a, b){
+				return a.x - b.x;
 			});
 			
 			for (var i = 0; i < boxes.length; i++) {
 				if(!intersecting(boxes[i], boxes[i+1])){
 					newBoxes.push(boxes[i]);
-					/*if(boxes[i+1])
-						boxes[i+1].x = boxes[i].right ;*/
-				} else {
+			
 					if(boxes[i+1])
-						boxes[i+1].y = boxes[i].top ;
+						boxes[i+1].x = boxes[i].x + boxes[i].width;	
 				}
 			}
 
 			lastBox++;
 			
-			if(lastBox < 50)
+			if(lastBox < 80)
 				checkIntersections(newBoxes, next);
 
 			else {
+
 				values.boxes = newBoxes;
 				
 				for (var dimension in values.space){
@@ -77,8 +76,7 @@ var gaem = (function(){
 				}
 				
 				for (var item in movingObjects){
-					var i = movingObjects[item],
-						speed = movingObjects[item];
+					var i = movingObjects[item];
 
 					if(values.boxes[i] && values.boxes[i].feature != 'next'){
 						values.boxes[i].points = movingObjects[item] * 10;
@@ -86,7 +84,7 @@ var gaem = (function(){
 						values.boxes[i].alpha = .8;
 
 						if(values.boxes[i].feature != 'start')
-							move(values.boxes[i], speed); 
+							move(values.boxes[i], i); 
 					}
 				}
 
@@ -100,19 +98,10 @@ var gaem = (function(){
 	function intersecting(shapeA, shapeB) {
 
 		if(shapeB){
-			shapeA.left = shapeA.x;
-			shapeA.right = shapeA.x + shapeA.width;
-			shapeA.top	= shapeA.y;
-			shapeA.bottom = shapeA.y + shapeA.height;
-			shapeB.left = shapeB.x;
-			shapeB.right = shapeB.x + shapeB.width;
-			shapeB.top	= shapeB.y;
-			shapeB.bottom = shapeB.y + shapeB.height;
-
-			return (shapeA.left <= shapeB.right &&
-				shapeB.left <= shapeA.right &&
-				shapeA.top <= shapeB.bottom &&
-				shapeB.top <= shapeA.bottom);
+			return ((shapeA.x <= (shapeB.x + shapeB.width)) &&
+				(shapeB.x <= (shapeA.x + shapeA.width)) &&
+				(shapeA.y <= (shapeB.y + shapeB.height)) &&
+				(shapeB.y <= (shapeA.y + shapeA.height)));
 		} else
 			return false;
 	};
